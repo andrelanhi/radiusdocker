@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: raddb
+      MYSQL_USER: raduser
+      MYSQL_PASSWORD: radpass
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - radnet
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: freeradius
+    environment:
+      DB_HOST: mariadb
+      DB_USER: raduser
+      DB_PASS: radpass
+      DB_NAME: raddb
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - radnet
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    volumes:
+      - ./freeradius:/etc/freeradius
+
+  daloradius:
+    build: .
+    container_name: daloradius
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      freeradius:
+        condition: service_started
+    networks:
+      - radnet
+    ports:
+      - "8080:80"
+    volumes:
+      - ./daloradius:/var/www/daloradius
+
+volumes:
+  db_data:
+
+networks:
+  radnet:
+    driver: bridge
