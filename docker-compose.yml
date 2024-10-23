@@ -7,7 +7,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: raddb
       MYSQL_DATABASE: raddb
-      MYSQL_USER: radrad
+      MYSQL_USER: raduser
       MYSQL_PASSWORD: raddb
     volumes:
       - db_data:/var/lib/mysql
@@ -25,7 +25,7 @@ services:
     container_name: freeradius
     environment:
       DB_HOST: localhost
-      DB_USER: radrad
+      DB_USER: raduser
       DB_PASS: raddb
       DB_NAME: raddb
     depends_on:
